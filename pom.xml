@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.redhat.reproducer</groupId>
-  <artifactId>custom-log4j2-addon</artifactId>
-  <packaging>jar</packaging>
+  <artifactId>custom-log4J2-addon</artifactId>
+  <packaging>bundle</packaging>
   <version>1.0-SNAPSHOT</version>
   <name>Custom add-on for Log4J2</name>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
     <!--
            <version.fuse>7.7.0.fuse-sb2-770010-redhat-00001</version.fuse>
            <version.fuse>7.8.0.fuse-sb2-780038-redhat-00001</version.fuse>
@@ -19,7 +22,7 @@
     <dependencies>
       <dependency>
         <groupId>org.jboss.redhat-fuse</groupId>
-        <artifactId>fuse-springboot-bom</artifactId>
+        <artifactId>fuse-karaf-bom</artifactId>
         <version>${version.fuse}</version>
         <type>pom</type>
         <scope>import</scope>
@@ -27,10 +30,59 @@
     </dependencies>
   </dependencyManagement>
   <dependencies>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+    </dependency>
 
   </dependencies>
+
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.6.0</version>
+        <executions>
+          <execution>
+            <id>log4j-plugin-processor</id>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <phase>process-classes</phase>
+            <configuration>
+              <proc>only</proc>
+              <annotationProcessors>
+                <annotationProcessor>org.apache.logging.log4j.core.config.plugins.processor.PluginProcessor</annotationProcessor>
+              </annotationProcessors>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>2.3.7</version>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+            <Include-Resource>META-INF=${project.build.directory}/classes/META-INF</Include-Resource>
+            <Export-Package>
+                    com.redhat.log4j2
+            </Export-Package>
+            <Import-Package></Import-Package>
+            <!-- <Embed-Dependency>apache-log4j-extras;scope=compile|runtime;inline=true, log4j-rolling-appender;scope=compile|runtime;inline=true
+            </Embed-Dependency> -->
+            <_failok>true</_failok>
+            <Fragment-Host>org.ops4j.pax.logging.pax-logging-log4j2</Fragment-Host>
+          </instructions>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 </project>
